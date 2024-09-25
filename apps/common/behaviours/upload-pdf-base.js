@@ -152,6 +152,7 @@ module.exports = class UploadPDFBase {
     const pdfModel = new PDFModel();
     pdfModel.set({ template: html });
     const pdfData = await pdfModel.save();
+    console.log('*********** PDF DATA ', pdfData);
 
     return await this.sendEmailWithAttachment(req, pdfData);
   }
