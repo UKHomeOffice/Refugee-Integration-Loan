@@ -19,6 +19,7 @@ module.exports = superclass => class extends superclass {
       req.log('info', 'ril.form.accept.submit_form.successful');
       return super.successHandler(req, res, next);
     } catch (err) {
+      console.log('********************* SUBMIT ERROR ', err);
       req.log('error', 'ril.form.accept.submit_form.error', err.message || err);
       return next(err);
     }
