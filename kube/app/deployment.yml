@@ -57,6 +57,10 @@ spec:
           env:
             - name: TZ
               value: Europe/London
+              {{ if or (eq .KUBE_NAMESPACE .BRANCH_ENV) (eq .KUBE_NAMESPACE .UAT_ENV) }}
+            - name: NODE_TLS_REJECT_UNAUTHORIZED
+              value: "0"
+              {{ end }}
             - name: REDIS_PORT
               value: "6379"
             - name: REDIS_HOST

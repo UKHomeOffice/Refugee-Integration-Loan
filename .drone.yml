@@ -51,7 +51,7 @@ ui_integration_tests: &ui_integration_tests
     NOTIFY_STUB: true
   commands:
     - yarn run test:ui-integration
-    
+
 accessibility_tests: &accessibility_tests
   pull: if-not-exists
   image: node:18
@@ -153,7 +153,7 @@ steps:
         include:
           - master
       event: push
-  
+
   - name: accessibility_tests_deploy
     <<: *accessibility_tests
     when:
@@ -275,7 +275,7 @@ steps:
           - master
           - feature/*
       event: pull_request
-  
+
   - name: accessibility_tests_branch
     <<: *accessibility_tests
     when:
@@ -284,7 +284,7 @@ steps:
           - master
           - feature/*
       event: pull_request
-  
+
   - name: acceptance_tests_branch
     <<: *acceptance_tests
     commands:

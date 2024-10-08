@@ -48,6 +48,10 @@ spec:
               cpu: 250m
               memory: 256Mi
           env:
+          # {{ if or (eq .KUBE_NAMESPACE .BRANCH_ENV) (eq .KUBE_NAMESPACE .UAT_ENV) }}
+          #   - name: NODE_TLS_REJECT_UNAUTHORIZED
+          #     value: "0"
+          # {{ end }}
             - name: APP_PORT
               value: "8001"
           securityContext:

@@ -53,6 +53,7 @@ module.exports = class UploadPDFBase {
   }
 
   async sendEmailWithAttachment(req, pdfData) {
+    console.log('*************** BEHAVIOUR CONFIG ', this.behaviourConfig);
     const personalisations = this.behaviourConfig.notifyPersonalisations;
     const appName = this.behaviourConfig.app;
     const appComponent = this.behaviourConfig.component;
@@ -65,6 +66,8 @@ module.exports = class UploadPDFBase {
       if (notifyKey === 'USE_MOCK') {
         req.log('warn', '*** Notify API Key set to USE_MOCK. Ensure disabled in production! ***');
       }
+
+      console.log(notifyClient.prepareUpload(pdfData, { confirmEmailBeforeDownload: false }));
 
       await notifyClient.sendEmail(config.govukNotify.templateForm[appName], caseworkerEmail, {
         personalisation: Object.assign({}, personalisations, {
@@ -80,6 +83,7 @@ module.exports = class UploadPDFBase {
 
       return await this.sendReceipt(req, notifyClient);
     } catch (err) {
+      console.log('********************* PDF ERROR ', err);
       const error = _.get(err, 'response.data.errors[0]', err.message || err);
       req.log('error', `ril.form.${appName}.submit_form.create_email_with_file_notify.error`, error);
       throw new Error(error);
@@ -147,13 +151,18 @@ module.exports = class UploadPDFBase {
   }
 
   async send(req, res, locals) {
+    // try{
     const html = await this.renderHTML(req, res, locals);
 
     const pdfModel = new PDFModel();
     pdfModel.set({ template: html });
     const pdfData = await pdfModel.save();
+    console.log('*******************PDF DATA ', pdfData);
 
     return await this.sendEmailWithAttachment(req, pdfData);
+  // } catch (err){
+  //   req.log('error', `ERROR SAVING AND SENDING PDF DATA ${JSON.stringify(err, null, 2)}`);
+  // }
   }
 
   sortSections(locals) {
