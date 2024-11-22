@@ -112,5 +112,5 @@ yarn upgrade express@"<15.0.0"
 In this example we have updated just the `express` npm package to the latest version before 15.0.0. So for instance, if it was set to `14.16.0` prior, this might update to the latest minor/patch fix version `14.17.1`. This is a safe way to get the latest minor/patch version before the next major/minor respectively to mitigate bringing in a breaking change.
 Here is an example for updating a dev_dependency bringing in the latest patch fix for version `8.2.x`
 ```
-yarn upgrade mocha@"<8.3.0"
+yarn upgrade mocha@"<8.3.0" 
 ```
