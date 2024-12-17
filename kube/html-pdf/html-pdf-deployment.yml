@@ -37,8 +37,8 @@ spec:
         {{ else }}
         - name: html-pdf-converter
         {{ end }}
-          # html-pdf-converter:testing new image 28/10/24
-          image: quay.io/ukhomeofficedigital/html-pdf-converter:e1231eb0e5d155393b7f90f1540bc590ec63398c
+ # html-pdf-converter:v2.1.0 rolled back on 17/12/24 because of issues in prod
+          image: quay.io/ukhomeofficedigital/html-pdf-converter@sha256:45814848f0c1d56169ab90990891b03d52d59d7558255cfca8ed2ce2a02d034e
           imagePullPolicy: Always
           resources:
             requests:
