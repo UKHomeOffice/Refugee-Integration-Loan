@@ -5,8 +5,8 @@ metadata:
   {{ if eq .KUBE_NAMESPACE .PROD_ENV }}
   name: {{ .APP_NAME }}
   {{ else if eq .KUBE_NAMESPACE .BRANCH_ENV }}
-  annotations:
-    downscaler/uptime: {{ .NON_PROD_AVAILABILITY }}
+  # annotations:
+  #   downscaler/uptime: {{ .NON_PROD_AVAILABILITY }}
   name: {{ .APP_NAME }}-{{ .DRONE_SOURCE_BRANCH }}
   {{ else }}
   annotations:
@@ -58,8 +58,8 @@ spec:
             - name: TZ
               value: Europe/London
             # FIXME: This is a temporary fix because some internal services have self signed certs. This will need to be removed and certs will need to be reenabled in the future
-            - name: NODE_TLS_REJECT_UNAUTHORIZED
-              value: "0"
+            # - name: NODE_TLS_REJECT_UNAUTHORIZED
+            #   value: "0"
             - name: REDIS_PORT
               value: "6379"
             - name: REDIS_HOST
@@ -110,6 +110,12 @@ spec:
           volumeMounts:
             - mountPath: /public
               name: public
+            - mountPath: /certs
+              name: certs
+              readOnly: true
+            - name: bundle
+              mountPath: /etc/ssl/certs
+              readOnly: true
               
         - name: nginx-proxy
           # nginx-proxy-govuk:v4
@@ -122,14 +128,63 @@ spec:
               cpu: 250m
               memory: 256Mi
           env:
-{{ file .NGINX_SETTINGS | indent 12 }}
+            - name: PROXY_SERVICE_HOST
+              value: 127.0.0.1
+            - name: PROXY_SERVICE_PORT
+              value: "8080"
+            - name: ENABLE_UUID_PARAM
+              value: "FALSE"
+            - name: PORT_IN_HOST_HEADER
+              value: "FALSE"
+            - name: VERBOSE_ERROR_PAGES
+              value: "TRUE"
+            - name: EXTRA_NAXSI_RULES
+              value: |-
+                BasicRule wl:2,1000,1001,1002,1007,1008,1009,1010,1011,1013,1015,1101,1205,1314 "mz:BODY";
+                BasicRule wl:0 "mz:$HEADERS_VAR:Cookie";
+                BasicRule wl:1500 "mz:FILE_EXT";
+            - name: ADD_NGINX_SERVER_CFG
+              value: |-
+                ssl_stapling on;
+                ssl_stapling_verify on;
+                ssl_stapling_responder http://x1.i.lencr.org;
+                resolver 8.8.8.8 8.8.4.4;
+                ssl_certificate /certs/tls.crt;
+                ssl_certificate_key /certs/tls.key;
+                ssl_trusted_certificate /certs/tls.crt;
+                add_header Cache-Control private;
+                add_header X-Content-Type-Options "nosniff" always;
+                add_header X-XSS-Protection "1; mode=block" always;
+                location /public {
+                  add_header Cache-Control max-age=86400;
+                  add_header X-Content-Type-Options "nosniff" always;
+                  add_header X-XSS-Protection "1; mode=block" always;
+                  alias /public;
+                }
+# {{ file .NGINX_SETTINGS | indent 12 }}
           ports:
             - containerPort: 10443
           volumeMounts:
             - mountPath: /public
               name: public
+            - mountPath: /certs
+              name: certs
+              readOnly: true
+            - name: bundle
+              mountPath: /etc/ssl/certs
+              readOnly: true
           securityContext:
             runAsNonRoot: true
       volumes:
         - name: public
           emptyDir: {}
+        - name: certs
+          secret:
+            {{ if eq .KUBE_NAMESPACE .BRANCH_ENV }}
+            secretName: tls
+            {{ else }}
+            secretName: tls-cert
+            {{ end }}
+        - name: bundle
+          configMap:
+            name: bundle

@@ -1,14 +1,35 @@
+# apiVersion: cert-manager.io/v1
+# kind: Certificate
+# metadata:
+#   name: branch-tls-internal
+#   labels:
+#     cert-manager.io/solver: route53
+# spec:
+#   commonName: "*.internal.{{ .BRANCH_ENV }}.homeoffice.gov.uk"
+#   dnsNames:
+#   - "*.internal.{{ .BRANCH_ENV }}.homeoffice.gov.uk"
+#   issuerRef:
+#     kind: ClusterIssuer
+#     name: letsencrypt-prod
+#   secretName: branch-tls-internal
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: branch-tls-internal
-  labels:
-    cert-manager.io/solver: route53
+  name: tls
 spec:
-  commonName: "*.internal.{{ .BRANCH_ENV }}.homeoffice.gov.uk"
-  dnsNames:
-  - "*.internal.{{ .BRANCH_ENV }}.homeoffice.gov.uk"
+  secretName: tls
   issuerRef:
+    name: platform-ca
     kind: ClusterIssuer
-    name: letsencrypt-prod
-  secretName: branch-tls-internal
+  dnsNames:
+  {{ if eq .KUBE_NAMESPACE .BRANCH_ENV }}
+  - {{ .APP_NAME }}-{{ .DRONE_SOURCE_BRANCH }}
+  - {{ .APP_NAME }}-{{ .DRONE_SOURCE_BRANCH }}.{{ .KUBE_NAMESPACE }}
+  - {{ .APP_NAME }}-{{ .DRONE_SOURCE_BRANCH }}.{{ .KUBE_NAMESPACE }}.svc
+  - {{ .APP_NAME }}-{{ .DRONE_SOURCE_BRANCH }}.{{ .KUBE_NAMESPACE }}.svc.cluster.local
+  {{ else }}
+  - {{ .APP_NAME }}
+  - {{ .APP_NAME }}.{{ .KUBE_NAMESPACE }}
+  - {{ .APP_NAME }}.{{ .KUBE_NAMESPACE }}.svc
+  - {{ .APP_NAME }}.{{ .KUBE_NAMESPACE }}.svc.cluster.local
+  {{ end }}

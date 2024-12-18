@@ -50,6 +50,15 @@ spec:
           env:
             - name: APP_PORT
               value: "8001"
+          volumeMounts:
+            - mountPath: /public
+              name: public
+            - mountPath: /certs
+              name: certs
+              readOnly: true
+            - name: bundle
+              mountPath: /etc/ssl/certs
+              readOnly: true
           securityContext:
             runAsNonRoot: true
 
@@ -78,8 +87,42 @@ spec:
               value: "FALSE"
             - name: ERROR_REDIRECT_CODES
               value: "599"
+            - name: SERVER_CERT
+              value: /certs/tls.crt
+            - name: SERVER_KEY
+              value: /certs/tls.key
+            - name: ADD_NGINX_SERVER_CFG
+              value: |-
+                resolver 8.8.8.8 8.8.4.4;
+                ssl_stapling_verify on;
+                ssl_stapling_responder http://x1.i.lencr.org;
+                ssl_certificate /certs/tls.crt;
+                ssl_certificate_key /certs/tls.key;
+                ssl_trusted_certificate /certs/tls.crt;
+          volumeMounts:
+            - mountPath: /public
+              name: public
+            - mountPath: /certs
+              name: certs
+              readOnly: true
+            - name: bundle
+              mountPath: /etc/ssl/certs
+              readOnly: true      
           securityContext:
             runAsNonRoot: true
           ports:
             - containerPort: 10080
             - containerPort: 10443
+      volumes:
+        - name: public
+          emptyDir: {}
+        - name: certs
+          secret:
+            {{ if eq .KUBE_NAMESPACE .BRANCH_ENV }}
+            secretName: tls
+            {{ else }}
+            secretName: tls-cert
+            {{ end }}
+        - name: bundle
+          configMap:
+            name: bundle
